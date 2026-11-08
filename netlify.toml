@@ -1,0 +1,10 @@
+# Konfigurasi Netlify — jaga agar manifest & ikon tidak ditimpa fallback SPA
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
