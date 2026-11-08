@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0F1117"/>
+  <rect x="0.5" y="0.5" width="511" height="511" rx="111.5" fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2"/>
+  <!-- sumbu -->
+  <path d="M116 132 V376 H396" fill="none" stroke="#3C4356" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- area di bawah garis -->
+  <path d="M150 330 L232 258 L300 292 L372 176 L372 376 L150 376 Z" fill="#34D399" fill-opacity="0.14"/>
+  <!-- garis naik -->
+  <path d="M150 330 L232 258 L300 292 L372 176" fill="none" stroke="#34D399" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- titik -->
+  <circle cx="150" cy="330" r="17" fill="#0F1117" stroke="#34D399" stroke-width="12"/>
+  <circle cx="232" cy="258" r="17" fill="#0F1117" stroke="#34D399" stroke-width="12"/>
+  <circle cx="300" cy="292" r="17" fill="#0F1117" stroke="#34D399" stroke-width="12"/>
+  <circle cx="372" cy="176" r="21" fill="#8BA4FF" stroke="#0F1117" stroke-width="10"/>
+</svg>

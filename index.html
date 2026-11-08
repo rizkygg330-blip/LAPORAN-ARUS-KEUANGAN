@@ -2,8 +2,19 @@
 <html lang="id" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinTrack — Laporan Keuangan Pribadi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F1117">
+<meta name="description" content="Catat transaksi, atur anggaran, dan pantau laporan keuangan pribadi. Bekerja offline, data tersimpan di perangkat.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Laporan Keuangan">
+<title>Laporan Keuangan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <script>
   /* terapkan tema sebelum render untuk menghindari flash */
   try{
@@ -60,9 +71,8 @@
   }
   .logo{display:flex;align-items:center;gap:11px;padding:2px 8px 22px}
   .logo .mark{
-    width:32px;height:32px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
-    display:grid;place-items:center;font-weight:700;font-size:15px;flex:0 0 32px;
-    letter-spacing:-.02em;
+    width:30px;height:30px;border-radius:8px;background:var(--ink);color:var(--card);
+    display:grid;place-items:center;flex:0 0 30px;
   }
   .logo b{color:var(--ink);font-size:15px;letter-spacing:-.02em;display:block;line-height:1.15;font-weight:650}
   .logo span{font-size:10.5px;color:var(--muted);letter-spacing:.01em}
@@ -370,10 +380,15 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo">
-      <div class="mark">F</div>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="19" height="19" fill="none">
+          <path d="M9 34 L18 24 L27 28 L38 14" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="38" cy="14" r="2.6" fill="currentColor"/>
+        </svg>
+      </div>
       <div>
-        <b>FinTrack</b>
-        <span>Laporan Keuangan Pribadi</span>
+        <b>Laporan Keuangan</b>
+        <span>Keuangan pribadi</span>
       </div>
     </div>
     <div class="nav-label">Menu</div>
@@ -390,6 +405,7 @@
 
   <!-- MAIN -->
   <main class="main">
+    <div id="installBanner"></div>
     <div class="topbar">
       <div class="page-title">
         <h1 id="pageTitle">Dashboard</h1>
@@ -401,6 +417,7 @@
           <select id="periodSelect" class="btn" style="padding-right:8px"></select>
           <button class="btn btn-sm" id="btnNextMonth" title="Bulan berikutnya">›</button>
         </div>
+        <button class="btn btn-sm btn-ghost" id="btnInstall" style="display:none">⤓ Install</button>
         <button class="btn btn-icon theme-toggle" id="btnTheme" title="Ganti mode terang / gelap">◐</button>
         <button class="btn" id="btnExport">Ekspor CSV</button>
         <button class="btn btn-primary" id="btnAdd">＋ Transaksi</button>
@@ -1833,11 +1850,124 @@ $('#fileImport').addEventListener('change', e=>{
   e.target.value='';
 });
 
+
+/* ============================================================
+   PWA — install ke home screen / desktop + offline
+   ============================================================ */
+let deferredPrompt = null;
+const DISMISS_KEY = 'lapkeu_install_dismissed';
+
+function mq(query){
+  try{ return !!(window.matchMedia && window.matchMedia(query).matches); }catch(e){ return false; }
+}
+function isStandalone(){
+  return mq('(display-mode: standalone)') || mq('(display-mode: minimal-ui)') ||
+         mq('(display-mode: fullscreen)') || window.navigator.standalone === true;
+}
+function isIOS(){
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function canInstall(){
+  return !!deferredPrompt && !isStandalone();
+}
+
+function refreshInstallUI(){
+  const btn = $('#btnInstall');
+  const banner = $('#installBanner');
+  if(!btn || !banner) return;
+
+  const available = canInstall();
+  btn.style.display = available ? '' : 'none';
+
+  const dismissed = (()=>{ try{ return sessionStorage.getItem(DISMISS_KEY)==='1'; }catch(e){ return false; } })();
+  const showBanner = !isStandalone() && !dismissed && (available || isIOS());
+
+  if(!showBanner){ banner.innerHTML = ''; return; }
+
+  const body = isIOS()
+    ? 'Tap tombol <b>Bagikan</b> (kotak dengan panah ke atas) di Safari, lalu pilih <b>Tambahkan ke Layar Utama</b>.'
+    : 'Pasang aplikasi di perangkatmu. Bisa dibuka layaknya aplikasi biasa, dan tetap jalan tanpa internet.';
+
+  banner.innerHTML = `<div class="card" style="padding:15px 18px;margin-bottom:16px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div style="display:flex;gap:12px;align-items:center;min-width:220px;flex:1">
+      <img src="icons/icon-192.png" alt="" width="38" height="38" style="border-radius:10px;flex:0 0 38px">
+      <div>
+        <div style="font-weight:650;font-size:13.5px;letter-spacing:-.01em">Install "Laporan Keuangan"</div>
+        <div style="color:var(--muted);font-size:12px;line-height:1.5;margin-top:1px">${body}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      ${available? '<button class="btn btn-primary btn-sm" id="btnInstallNow">Install sekarang</button>' : ''}
+      <button class="btn btn-sm btn-ghost" id="btnInstallLater">Nanti</button>
+    </div>
+  </div>`;
+
+  const now = $('#btnInstallNow');
+  if(now) now.addEventListener('click', doInstall);
+  const later = $('#btnInstallLater');
+  if(later) later.addEventListener('click', ()=>{
+    try{ sessionStorage.setItem(DISMISS_KEY,'1'); }catch(e){}
+    refreshInstallUI();
+  });
+}
+
+async function doInstall(){
+  if(!deferredPrompt){
+    toast('Buka menu browser lalu pilih "Install app" / "Tambahkan ke Layar Utama".', 'warn', 5000);
+    return;
+  }
+  deferredPrompt.prompt();
+  try{
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted') toast('Aplikasi berhasil dipasang.','ok');
+  }catch(e){}
+  deferredPrompt = null;
+  refreshInstallUI();
+}
+
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  refreshInstallUI();
+});
+
+window.addEventListener('appinstalled', ()=>{
+  deferredPrompt = null;
+  try{ sessionStorage.setItem(DISMISS_KEY,'1'); }catch(e){}
+  refreshInstallUI();
+  toast('Terpasang. Aplikasi bisa dibuka dari ikon di perangkat.','ok',4000);
+});
+
+$('#btnInstall').addEventListener('click', doInstall);
+
+/* service worker + offline */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* shortcut dari manifest: ?action=add / ?action=report */
+(function handleShortcut(){
+  const params = new URLSearchParams(location.search);
+  const action = params.get('action');
+  if(!action) return;
+  setTimeout(()=>{
+    if(action === 'add'){ go('transaksi'); openTx(); }
+    else if(action === 'report'){ go('laporan'); }
+    else if(action === 'budget'){ go('anggaran'); }
+    history.replaceState(null, '', location.pathname);
+  }, 250);
+})();
+
 /* ============================================================
    INIT
    ============================================================ */
 applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 go('dashboard');
+refreshInstallUI();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5721653f8694ad7',t:'MTc5NDExNDc5Mw=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5721653f8694ad7',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
